@@ -9,10 +9,10 @@ const data = require('./lib/data');
 //     console.log('error is', err);
 // })
 
-//reading file
-data.read('test', 'myFile', (err, data) =>{
-    console.log(err, data);
-})
+// //reading file
+// data.read('test', 'myFile', (err, data) =>{
+//     console.log(err, data);
+// })
 
 //updating existing file
 // data.update('test', 'myFile', {name: 'Norway', continent:'Europe'}, (err) =>{
@@ -20,9 +20,9 @@ data.read('test', 'myFile', (err, data) =>{
 // })
 
 //deleting the myFile
-data.delete('test', 'myFile', (err) =>{
-    console.log(err);
-})
+// data.delete('test', 'myFile', (err) =>{
+//     console.log(err);
+// })
 
 //creating scafoldings
 const app = {};
