@@ -2,6 +2,7 @@
 const data = require('../../lib/data');
 const {hash} = require('../../helpers/utilities');
 const {parseJSON} = require('../../helpers/utilities');
+const tokenHandler = require('../routeHandlers/tokenHandler');
 
 //scafolding
 const handler = {};
@@ -24,18 +25,28 @@ handler._users.get = (requestProperties, callback) => {
     //checking the number is valid or not found
     const phone = typeof(requestProperties.QueryStringObject.phone) === 'string' && requestProperties.QueryStringObject.phone.trim().length === 11 ? requestProperties.QueryStringObject.phone : false;
     if(phone) {
-        //looking for the user
-        data.read('users', phone, (err, u) => {
-            const user = { ...parseJSON(u) };
-            if(!err && user) {
-                delete user.password;
-                callback(200, user);
-            }else{
-                callback(404, {
-                    error : "User not found",
+        //verify token
+        let token = typeof (requestProperties.headersObject.token) === 'string' ? requestProperties.headersObject.token : false;
+
+        tokenHandler._token.verify(token , phone, (tokenId) => {
+            if(tokenId) {
+                //looking for the user
+                data.read('users', phone, (err, u) => {
+                    const user = { ...parseJSON(u) };
+                    if(!err && user) {
+                        delete user.password;
+                        callback(200, user);
+                    }else{
+                        callback(404, {
+                            error : "User not found",
+                        })
+                    }
                 })
+            }else{
+                callback(403, {error: 'Authentication Failed'});
             }
-        })
+        }) 
+        
     }else{
         callback(404, {
             error : "User not found again",
@@ -106,7 +117,13 @@ handler._users.put = (requestProperties, callback) => {
 
     if(phone){
         if(firstName || lastName || password){
-            //looking up for user in db
+            //verify token
+        let token = typeof (requestProperties.headersObject.token) === 'string' ? requestProperties.headersObject.token : false;
+
+        tokenHandler._token.verify(token , phone, (tokenId) => {
+            if(tokenId) {
+                //looking for the user
+                //looking up for user in db
             data.read('users', phone, (err, uData) => {
                 const userData = { ...parseJSON(uData)};
                 if(!err && userData){
@@ -129,10 +146,14 @@ handler._users.put = (requestProperties, callback) => {
                     });
                 }
             })
+            }else{
+                callback(403, {error: 'Authentication Failed'});
+            }
+        })       
         }else{
             callback(400, {
                 error : 'You have to provide at least one field',
-            })
+            });
         }
     }else{
         callback(400, {
@@ -145,19 +166,30 @@ handler._users.put = (requestProperties, callback) => {
 handler._users.delete = (requestProperties, callback) => {
     const phone = typeof(requestProperties.QueryStringObject.phone) === 'string' && requestProperties.QueryStringObject.phone.trim().length === 11 ? requestProperties.QueryStringObject.phone : false;
     if(phone){
-        data.read('users', phone, (err, userData) => {
-            if(!err && userData){
-                data.delete('users', phone, (err) => {
-                    if(!err){
-                        callback(200, {message : 'User deleted successfully'});
+                //verify token
+                let token = typeof (requestProperties.headersObject.token) === 'string' ? requestProperties.headersObject.token : false;
+
+                tokenHandler._token.verify(token , phone, (tokenId) => {
+                    if(tokenId) {
+                        //looking for the user
+                       //look up
+                data.read('users', phone, (err, userData) => {
+                    if(!err && userData){
+                        data.delete('users', phone, (err) => {
+                            if(!err){
+                                callback(200, {message : 'User deleted successfully'});
+                            }else{
+                                callback(400, {error : 'user cannot be deleted'});
+                            }
+                        });
                     }else{
-                        callback(400, {error : 'user cannot be deleted'});
+                        callback(500, {error : 'error occured deleting user'});
                     }
                 });
-            }else{
-                callback(500, {error : 'error occured deleting user'});
-            }
-        });
+                    }else{
+                        callback(403, {error: 'Authentication Failed'});
+                    }
+                }) 
     }else{
         callback(400, {
             error : 'You put the wrong phone number',
