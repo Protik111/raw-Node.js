@@ -3,6 +3,7 @@ const http = require('http');
 const {handleReqRes} = require('./helpers/handleReqRes');
 const environment = require('./helpers/environments');
 const data = require('./lib/data');
+const {sendTwilioSms} = require('./helpers/notifications');
 
 //creating file
 // data.create('test', 'myFile', {name: 'bangladesh', continent:'asia'}, (err) =>{
@@ -26,6 +27,11 @@ const data = require('./lib/data');
 
 //creating scafoldings
 const app = {};
+
+// @TODO remove later
+sendTwilioSms('01771904605', 'Hello world', (err) => {
+    console.log(`this is the error`, err);
+});
 
 //configuration
 // app.config = {
